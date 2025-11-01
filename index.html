@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo trang Gallery</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container-gallery {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .gallery-box {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 20px 15px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content-box {
+            position: relative;
+            max-width: 90%;
+            max-height: 90vh;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-img {
+            width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ff6b6b;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            color: white;
+            border: none;
+            font-size: 30px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.6);
+        }
+
+        .prev {
+            left: -60px;
+        }
+
+        .next {
+            right: -60px;
+        }
+
+        .image-counter {
+            text-align: center;
+            color: white;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-gallery">
+        <h1><i class="fas fa-images"></i> Animal Gallery</h1>
+        
+        <div class="gallery-box">
+            <div class="gallery-grid" id="gallery">
+                <!-- Gallery items will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content-box">
+            <span class="close-btn">&times;</span>
+            <button class="nav-btn prev"><i class="fas fa-chevron-left"></i></button>
+            <img id="modalImage" class="modal-img" src="" alt="">
+            <button class="nav-btn next"><i class="fas fa-chevron-right"></i></button>
+            <div class="image-counter">
+                <span id="currentImage">1</span> / <span id="totalImages">6</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // Dữ liệu động vật
+        const animals = [
+            {
+                name: 'Sư tử',
+                image: 'photo-1614027164847-1b28cfe1df60.jpg'
+            },
+            {
+                name: 'Mèo',
+                image: 'photo-1574158622682-e40e69881006.jpg'
+            },
+            {
+                name: 'Chim',
+                image: 'photo-1552728089-57bdde30beb3.jpg'
+            },
+            {
+                name: 'Tê giác',
+                image: 'OIP.jpg'
+            },
+            {
+                name: 'Gấu trúc',
+                image: 'photo-1525382455947-f319bc05fb35.jpg'
+            },
+            {
+                name: 'Dê',
+                image: 'OIP(1).jpg'
+            }
+        ];
+
+        let currentIndex = 0;
+
+        // Tạo gallery
+        function createGallery() {
+            const gallery = $('#gallery');
+            animals.forEach((animal, index) => {
+                const item = `
+                    <div class="gallery-item" data-index="${index}">
+                        <img src="${animal.image}" alt="${animal.name}" loading="lazy">
+                        <div class="gallery-item-label">${animal.name}</div>
+                    </div>
+                `;
+                gallery.append(item);
+            });
+            $('#totalImages').text(animals.length);
+        }
+
+        // Xử lý click vào gallery item
+        $(document).on('click', '.gallery-item', function() {
+            currentIndex = $(this).data('index');
+            showModal(currentIndex);
+        });
+
+        // Hiển thị modal
+        function showModal(index) {
+            $('#modalImage').attr('src', animals[index].image);
+            $('#currentImage').text(index + 1);
+            $('#imageModal').addClass('show');
+            $('body').css('overflow', 'hidden');
+        }
+
+        // Đóng modal
+        $('.close-btn, #imageModal').on('click', function(e) {
+            if (e.target.id === 'imageModal' || e.target.classList.contains('close-btn')) {
+                $('#imageModal').removeClass('show');
+                $('body').css('overflow', 'auto');
+            }
+        });
+
+        // Nút previous
+        $('.prev').on('click', function(e) {
+            e.stopPropagation();
+            currentIndex = (currentIndex - 1 + animals.length) % animals.length;
+            showModal(currentIndex);
+        });
+
+        // Nút next
+        $('.next').on('click', function(e) {
+            e.stopPropagation();
+            currentIndex = (currentIndex + 1) % animals.length;
+            showModal(currentIndex);
+        });
+
+        // Phím mũi tên
+        $(document).on('keydown', function(e) {
+            if ($('#imageModal').hasClass('show')) {
+                if (e.key === 'ArrowLeft') {
+                    currentIndex = (currentIndex - 1 + animals.length) % animals.length;
+                    showModal(currentIndex);
+                } else if (e.key === 'ArrowRight') {
+                    currentIndex = (currentIndex + 1) % animals.length;
+                    showModal(currentIndex);
+                } else if (e.key === 'Escape') {
+                    $('#imageModal').removeClass('show');
+                    $('body').css('overflow', 'auto');
+                }
+            }
+        });
+
+        // Khởi tạo
+        $(document).ready(function() {
+            createGallery();
+        });
+    </script>
+</body>
+</html>
